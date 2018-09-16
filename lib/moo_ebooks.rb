@@ -1,10 +1,5 @@
 # frozen_string_literal: true
 
-def log(*args)
-  STDERR.print args.map(&:to_s).join(' ') + "\n"
-  STDERR.flush
-end
-
 module Ebooks
   GEM_PATH = File.expand_path(File.join(File.dirname(__FILE__), '..'))
   DATA_PATH = File.join(GEM_PATH, 'data')
