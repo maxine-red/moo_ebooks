@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-$debug = false
+#$debug = false
 
 def log(*args)
   STDERR.print args.map(&:to_s).join(' ') + "\n"
@@ -17,8 +17,6 @@ module Ebooks
 end
 
 require 'moo_ebooks/nlp'
-require 'moo_ebooks/archive'
-require 'moo_ebooks/sync'
 require 'moo_ebooks/suffix'
 require 'moo_ebooks/model'
 require 'moo_ebooks/bot'
