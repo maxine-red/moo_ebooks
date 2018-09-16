@@ -41,7 +41,6 @@ module Ebooks
       @tikis = {}
     end
 
-
     # Generate a new model from a corpus file
     # @param data [Hash]
     # @return [Ebooks::Model]

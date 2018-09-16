@@ -45,19 +45,19 @@ describe Ebooks::Model do
 
   describe '.consume' do
     it 'interprets lines with @ as mentions' do
-      model = Ebooks::Model.consume({ mentions:["@m1spy hello!"]})
+      model = Ebooks::Model.consume(mentions: ['@m1spy hello!'])
       expect(model.sentences.count).to eq 0
       expect(model.mentions.count).to eq 1
     end
 
     it 'interprets lines without @ as statements' do
-      model = Ebooks::Model.consume({ statuses: ["hello!"]})
+      model = Ebooks::Model.consume(statuses: ['hello!'])
       expect(model.mentions.count).to eq 0
       expect(model.sentences.count).to eq 1
     end
 
     it 'handles strange unicode edge-cases' do
-      model = Ebooks::Model.consume({ statuses: ["💞\n💞"] })
+      model = Ebooks::Model.consume(statuses: ["💞\n💞"])
       expect(model.mentions.count).to eq 0
       expect(model.sentences.count).to eq 2
       model.update

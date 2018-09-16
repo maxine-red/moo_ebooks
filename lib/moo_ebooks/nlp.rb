@@ -6,9 +6,12 @@ require 'highscore'
 require 'htmlentities'
 
 module Ebooks
+  # @private
   module NLP
-    # We deliberately limit our punctuation handling to stuff we can do consistently
-    # It'll just be a part of another token if we don't split it out, and that's fine
+    # We deliberately limit our punctuation handling to stuff we can do
+    # consistently
+    # It'll just be a part of another token if we don't split it out, and
+    # that's fine
     PUNCTUATION = '.?!,'
 
     # Lazy-load NLP libraries and resources
@@ -19,7 +22,11 @@ module Ebooks
     # Stopwords are common words that should often be ignored
     # @return [Array<String>]
     def self.stopwords
-      @stopwords ||= File.exist?('stopwords.txt') ? File.read('stopwords.txt').split : []
+      @stopwords ||= if File.exist?('stopwords.txt')
+                       File.read('stopwords.txt').split
+                     else
+                       []
+                     end
     end
 
     # Lazily loads an array of known English nouns
@@ -54,7 +61,8 @@ module Ebooks
     # @param text [String]
     # @return [String]
     def self.normalize(text)
-      htmlentities.decode text.tr('“', '"').tr('”', '"').tr('’', "'").gsub('…', '...')
+      htmlentities.decode(text.tr('“', '"').tr('”', '"').tr('’', "'")
+        .gsub('…', '...'))
     end
 
     # Split text into sentences
@@ -73,7 +81,8 @@ module Ebooks
     # @param sentence [String]
     # @return [Array<String>]
     def self.tokenize(sentence)
-      regex = /\s+|(?<=[#{PUNCTUATION}]\s)(?=[a-zA-Z])|(?<=[a-zA-Z])(?=[#{PUNCTUATION}]+\s)/
+      regex = /\s+|(?<=[#{PUNCTUATION}]\s)(?=[a-zA-Z])|
+        (?<=[a-zA-Z])(?=[#{PUNCTUATION}]+\s)/x
       sentence.split(regex)
     end
 
@@ -132,13 +141,9 @@ module Ebooks
     def self.space_between?(token1, token2)
       p1 = punctuation?(token1)
       p2 = punctuation?(token2)
-      if p1 && p2 # "foo?!"
+      if (p1 && p2) || (!p1 && p2) # "foo?!" || "foo."
         false
-      elsif !p1 && p2 # "foo."
-        false
-      elsif p1 && !p2 # "foo. rah"
-        true
-      else # "foo rah"
+      else # "foo rah" || "foo. rah"
         true
       end
     end
@@ -175,7 +180,7 @@ module Ebooks
           opened += 1 if token.match(starter)
           opened -= 1 if token.match(ender)
 
-          return true if opened < 0 # Too many ends!
+          return true if opened.negative? # Too many ends!
         end
 
         return true if opened != 0 # Mismatch somewhere.
@@ -184,13 +189,13 @@ module Ebooks
       false
     end
 
-    # Determine if a2 is a subsequence of a1
-    # @param a1 [Array]
-    # @param a2 [Array]
+    # Determine if ary2 is a subsequence of ary1
+    # @param ary1 [Array]
+    # @param ary2 [Array]
     # @return [Boolean]
-    def self.subseq?(a1, a2)
-      !a1.each_index.find do |i|
-        a1[i...i + a2.length] == a2
+    def self.subseq?(ary1, ary2)
+      !ary1.each_index.find do |i|
+        ary1[i...i + ary2.length] == ary2
       end.nil?
     end
   end

@@ -5,6 +5,7 @@ module Ebooks
   # instead of making a chain by looking up bigrams it uses the
   # positions to randomly replace token array suffixes in one sentence
   # with matching suffixes in another
+  # @private
   class SuffixGenerator
     # Build a generator from a corpus of tikified sentences
     # "tikis" are token indexes-- a way of representing words
@@ -41,13 +42,12 @@ module Ebooks
           last_tiki = tiki
         end
       end
-
-      self
     end
 
     # Generate a recombined sequence of tikis
     # @param passes [Integer] number of times to recombine
-    # @param n [Symbol] :unigrams or :bigrams (affects how conservative the model is)
+    # @param n [Symbol] :unigrams or :bigrams (affects how conservative the
+    # model is)
     # @return [Array<Integer>]
     def generate(passes = 5, n = :unigrams)
       index = rand(@sentences.length)
@@ -62,7 +62,11 @@ module Ebooks
           next_tiki = tikis[i + 1]
           break if next_tiki.nil?
 
-          alternatives = n == :unigrams ? @unigrams[next_tiki] : @bigrams[tiki][next_tiki]
+          alternatives = if n == :unigrams
+                           @unigrams[next_tiki]
+                         else
+                           @bigrams[tiki][next_tiki]
+                         end
           # Filter out suffixes from previous sentences
           alternatives.reject! { |a| a[1] == INTERIM || used.include?(a[0]) }
           varsites[i] = alternatives unless alternatives.empty?
@@ -78,7 +82,9 @@ module Ebooks
             potential = tikis[0..start + 1] + suffix
 
             # Ensure we're not just rebuilding some segment of another sentence
-            next if verbatim.find { |v| NLP.subseq?(v, potential) || NLP.subseq?(potential, v) }
+            next if verbatim.find do |v|
+              NLP.subseq?(v, potential) || NLP.subseq?(potential, v)
+            end
             used << alt[0]
             variant = potential
             break
