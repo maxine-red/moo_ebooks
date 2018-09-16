@@ -1,161 +1,70 @@
+# Moo ebooks: A minimalistic ebook library
 
-## Unmaintained
+[![Build Status](https://travis-ci.org/maxine-red/moo_ebooks.svg?branch=master)](https://travis-ci.org/maxine-red/moo_ebooks)
 
-The Twitter social environment is a bit different than it was when I originally wrote this, and Twitter has [deprecated the streaming API](https://developer.twitter.com/en/docs/accounts-and-users/subscribe-account-activity/api-reference/user-stream) on which the ebooks bots depend. I've moved on to other projects, but feel free to fork!
+[![Gem Version](https://img.shields.io/gem/v/moo_ebooks.svg)](https://rubygems.org/gems/moo_ebooks)
+![GitHub Release Date](https://img.shields.io/github/release-date/maxine-red/moo_ebooks.svg)
 
-# twitter\_ebooks
+[![Maintainability](https://api.codeclimate.com/v1/badges/37caa7ef71f207e6f961/maintainability)](https://codeclimate.com/github/maxine-red/moo_ebooks/maintainability)
+[![Test Coverage](https://api.codeclimate.com/v1/badges/37caa7ef71f207e6f961/test_coverage)](https://codeclimate.com/github/maxine-red/moo_ebooks/test_coverage)
 
-[![Gem Version](https://badge.fury.io/rb/twitter_ebooks.svg)](http://badge.fury.io/rb/twitter_ebooks)
-[![Build Status](https://travis-ci.org/mispy/twitter_ebooks.svg)](https://travis-ci.org/mispy/twitter_ebooks)
+[![Inline docs](http://inch-ci.org/github/maxine-red/moo_ebooks.svg)](http://inch-ci.org/github/maxine-red/moo_ebooks)
 
-A framework for building interactive twitterbots which respond to mentions/DMs. See [ebooks_example](https://github.com/mispy/ebooks_example) for a fully-fledged bot definition.
+## Description
 
-## New in 3.0
+Moo ebooks is a fork from the unmaintained 
+[Twitter ebooks](https://github.com/mispy/twitter_ebooks) and reduced it to a
+library.
 
-- About 80% less memory and storage use for models
-- Bots run in their own threads (no eventmachine), and startup is parallelized
-- Bots start with `ebooks start`, and no longer die on unhandled exceptions
-- `ebooks auth` command will create new access tokens, for running multiple bots
-- `ebooks console` starts a ruby interpreter with bots loaded (see Ebooks::Bot.all)
-- Replies are slightly rate-limited to prevent infinite bot convos
-- Non-participating users in a mention chain will be dropped after a few tweets
-- [API documentation](http://rdoc.info/github/mispy/twitter_ebooks) and tests
+The original project was a framework to handle ebook accounts on Twitter, where
+this library concentrates on the language modeling and text creation part.
 
-Note that 3.0 is not backwards compatible with 2.x, so upgrade carefully! In particular, **make sure to regenerate your models** since the storage format changed.
+That means that data gathering needs to be done externally, but it also allows
+more freedom of what platforms to connect.
+
+If you want features, like nice bots, you have to implement it yourself.
+Literally all interactions with social media accounts have to be done
+externally.
 
 ## Installation
 
-Requires Ruby 2.1+. Ruby 2.3+ is recommended.
+Add `gem 'moo_ebooks', '~> 1.0'` to you gemfile and then run `bundle install`
 
-```bash
-gem install twitter_ebooks
-```
+or simply run `gem install moo_ebooks`
 
-## Setting up a bot
-
-Run `ebooks new <reponame>` to generate a new repository containing a sample bots.rb file, which looks like this:
+## Example usage code
 
 ``` ruby
-# This is an example bot definition with event handlers commented out
-# You can define and instantiate as many bots as you like
-
-class MyBot < Ebooks::Bot
-  # Configuration here applies to all MyBots
-  def configure
-    # Consumer details come from registering an app at https://dev.twitter.com/
-    # Once you have consumer details, use "ebooks auth" for new access tokens
-    self.consumer_key = "" # Your app consumer key
-    self.consumer_secret = "" # Your app consumer secret
-
-    # Users to block instead of interacting with
-    self.blacklist = ['tnietzschequote']
-
-    # Range in seconds to randomize delay when bot.delay is called
-    self.delay_range = 1..6
-  end
-
-  def on_startup
-    scheduler.every '24h' do
-      # Tweet something every 24 hours
-      # See https://github.com/jmettraux/rufus-scheduler
-      # tweet("hi")
-      # pictweet("hi", "cuteselfie.jpg")
-    end
-  end
-
-  def on_message(dm)
-    # Reply to a DM
-    # reply(dm, "secret secrets")
-  end
-
-  def on_follow(user)
-    # Follow a user back
-    # follow(user.screen_name)
-  end
-
-  def on_mention(tweet)
-    # Reply to a mention
-    # reply(tweet, meta(tweet).reply_prefix + "oh hullo")
-  end
-
-  def on_timeline(tweet)
-    # Reply to a tweet in the bot's timeline
-    # reply(tweet, meta(tweet).reply_prefix + "nice tweet")
-  end
-
-  def on_favorite(user, tweet)
-    # Follow user who just favorited bot's tweet
-    # follow(user.screen_name)
-  end
-
-  def on_retweet(tweet)
-    # Follow user who just retweeted bot's tweet
-    # follow(tweet.user.screen_name)
-  end
-end
-
-# Make a MyBot and attach it to an account
-MyBot.new("abby_ebooks") do |bot|
-  bot.access_token = "" # Token connecting the app to this account
-  bot.access_token_secret = "" # Secret connecting the app to this account
-end
+# No example ready yet.
 ```
 
-`ebooks start` will run all defined bots in their own threads. The easiest way to run bots in a semi-permanent fashion is with [Heroku](https://www.heroku.com); just make an app, push the bot repository to it, enable a worker process in the web interface and it ought to chug along merrily forever.
+## Versioning
 
-The underlying streaming and REST clients from the [twitter gem](https://github.com/sferik/twitter) can be accessed at `bot.stream` and `bot.twitter` respectively.
+This gem follows Semantic Versioning 2.0.0!
 
-## Archiving accounts
 
-twitter\_ebooks comes with a syncing tool to download and then incrementally update a local json archive of a user's tweets (in this case, my good friend @0xabad1dea):
+## Donations
 
-``` zsh
-➜  ebooks archive 0xabad1dea corpus/0xabad1dea.json
-Currently 20209 tweets for 0xabad1dea
-Received 67 new tweets
-```
+[![Patreon](https://img.shields.io/badge/Patreon-donate-orange.svg)](https://www.patreon.com/maxine_red)
+[![KoFi](https://img.shields.io/badge/KoFi-donate-blue.svg)](https://ko-fi.com/maxinered)
 
-The first time you'll run this, it'll ask for auth details to connect with. Due to API limitations, for users with high numbers of tweets it may not be possible to get their entire history in the initial download. However, so long as you run it frequently enough you can maintain a perfect copy indefinitely into the future.
+## Social Media
 
-## Text models
+Follow me on Twitter, if you're brave enough.
 
-In order to use the included text modeling, you'll first need to preprocess your archive into a more efficient form:
+[![Twitter Follow](https://img.shields.io/twitter/follow/maxine_red.svg?style=social&logo=twitter&label=Follow)](https://twitter.com/maxine_red)
 
-``` zsh
-➜  ebooks consume corpus/0xabad1dea.json
-Reading json corpus from corpus/0xabad1dea.json
-Removing commented lines and sorting mentions
-Segmenting text into sentences
-Tokenizing 7075 statements and 17947 mentions
-Ranking keywords
-Corpus consumed to model/0xabad1dea.model
-```
+## License
 
-Notably, this works with both json tweet archives and plaintext files (based on file extension), so you can make a model out of any kind of text.
+[MIT](https://github.com/maxine-red/moo_ebooks/blob/master/LICENSE)
 
-Text files use newlines and full stops to seperate statements.
+Copyright 2013 :copyright: Jaiden Mispy
+Copyright 2018 :copyright: Maxine Michalski
 
-Once you have a model, the primary use is to produce statements and related responses to input, using a pseudo-Markov generator:
+## Contributing
 
-``` ruby
-> model = Ebooks::Model.load("model/0xabad1dea.model")
-> model.make_statement(140)
-=> "My Terrible Netbook may be the kind of person who buys Starbucks, but this Rackspace vuln is pretty straight up a backdoor"
-> model.make_response("The NSA is coming!", 130)
-=> "Hey - someone who claims to be an NSA conspiracy"
-```
-
-The secondary function is the "interesting keywords" list. For example, I use this to determine whether a bot wants to fav/retweet/reply to something in its timeline:
-
-``` ruby
-top100 = model.keywords.take(100)
-tokens = Ebooks::NLP.tokenize(tweet.text)
-
-if tokens.find { |t| top100.include?(t) }
-  favorite(tweet)
-end
-```
-
-## Bot niceness
-
-twitter_ebooks will drop bystanders from mentions for you and avoid infinite bot conversations, but it won't prevent you from doing a lot of other spammy things. Make sure your bot is a good and polite citizen!
+1. [Fork it](https://github.com/maxine-red/moo_ebooks/fork)
+1. Create your feature branch (git checkout -b my-new-feature)
+1. Commit your changes (git commit -am 'Add some feature')
+1. Push to the branch (git push origin my-new-feature)
+1. Create a new Pull Request
