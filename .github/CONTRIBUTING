@@ -1,0 +1,14 @@
+# How to contribute
+
+Thank you for thinking about contributing. You are awesome!
+
+Contributing is quite easy though.
+
+If you want to see a feature, there are two ways to add it:
+- add an issue and let people be assigned to it
+- fork, create your feature ands start a pull request
+
+This project uses RuboCop for style guidiance and tries to be conservative with
+gems included.
+
+Thanks again for considering to contribute!

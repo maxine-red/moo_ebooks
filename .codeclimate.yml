@@ -1,0 +1,9 @@
+plugins:
+  rubocop:
+    enabled: true
+  git-legal:
+    enabled: true
+  bundler-audit:
+    enabled: true
+  markdownlint:
+    enabled: true

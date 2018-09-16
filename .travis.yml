@@ -1,7 +1,23 @@
+env:
+  global:
+    - CC_TEST_REPORTER_ID=96f238fd7e66352701a3165709fabd053edf0517ac8e90e34957aee19cc2696d
+language: ruby
 rvm:
-  - 2.1.7
+  - 2.3
+  #- 2.4
+  #- 2.5
+deploy:
+  provider: rubygems
+  api_key:
+    secure: cHSnAlPwtzHfR2QP9W7mS/NnoDdbscpsqqsZESn/6jCSeVkvHI76YjjhxHP0lxh1QK/zlvyTNS9Z9mketFeVNEoXIDGMGC2KTAmLXq9fZ7G4EUN+uP48/TwOjbrHRe494KLyWXdvWFDesDOzmmDsnYeovClOTgx0Uws+tQCO/0mTomh7jGxCC8qKmgaZ9jCjsAOh5nZA2Hqb3rZQ1pbo9fIZICRB6et7oHcX8sR7dnI16xp9VwRPm4rj32apJRaxRS9t+q4oWfCEs4c58nz96LDvmAM3XGyrfeCRU7iaNb03uHbEjA7MBVNIp4ebMXNT9a1nycCV5TwIc5xjTCiYcOGgANvL+Sdyvsb+hTA7WaJ1U17WEmcUw1CEt77nx+lE9qXt5LG9mJI4vFIfSffjAa+P7+x2HeDQzI3mntJBiwGNNC9fdZ4TnVEZR+o4vDpehNXrucUwnSxJ8HtmGs1QjKEYhE8ty12gnHnMfVpRrJPDH1Igm0Xp+tZWuQ9tokfxqXiryxFir2PXjYEXsUCHtfeYokGEdCj+zzjdo2zy8RoSY8V1s/4zoU1MF4F1zwqgq3ZghVzB5LAVYb0uqJSF9i2KSM+Jyz9jSX99Ge4kq6AlYfqysknat5TsDfaVhZ6PS1gLlM1eZAB9IUMMBjlNfiWRe83wEoGSTckQ+y3OYAI=
+  on:
+    tags: true
+before_script:
+  - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+  - chmod +x ./cc-test-reporter
+  - ./cc-test-reporter before-build
 script:
-  - rspec spec
-notifications:
-  email:
-    - ebooks@mispy.me
+  - bundle exec rspec
+after_script:
+  - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
+

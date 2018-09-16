@@ -1,6 +1,5 @@
 # encoding: utf-8
 require 'twitter'
-require 'rufus/scheduler'
 
 # Monkeypatch hack to fix upstream dependency issue
 # https://github.com/sferik/twitter/issues/709
@@ -462,12 +461,6 @@ module Ebooks
     def tweet(text, *args)
       log "Tweeting '#{text}'"
       twitter.update(text, *args)
-    end
-
-    # Get a scheduler for this bot
-    # @return [Rufus::Scheduler]
-    def scheduler
-      @scheduler ||= Rufus::Scheduler.new
     end
 
     # Tweet some text with an image

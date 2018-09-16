@@ -3,7 +3,6 @@
 
 require 'twitter'
 require 'json'
-require 'mini_magick'
 require 'open-uri'
 require 'pry'
 
