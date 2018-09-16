@@ -5,8 +5,8 @@
 [![Gem Version](https://img.shields.io/gem/v/moo_ebooks.svg)](https://rubygems.org/gems/moo_ebooks)
 ![GitHub Release Date](https://img.shields.io/github/release-date/maxine-red/moo_ebooks.svg)
 
-[![Maintainability](https://api.codeclimate.com/v1/badges/37caa7ef71f207e6f961/maintainability)](https://codeclimate.com/github/maxine-red/moo_ebooks/maintainability)
-[![Test Coverage](https://api.codeclimate.com/v1/badges/37caa7ef71f207e6f961/test_coverage)](https://codeclimate.com/github/maxine-red/moo_ebooks/test_coverage)
+[![Maintainability](https://api.codeclimate.com/v1/badges/f4a14dd96b3554e7f633/maintainability)](https://codeclimate.com/github/maxine-red/moo_ebooks/maintainability)
+[![Test Coverage](https://api.codeclimate.com/v1/badges/f4a14dd96b3554e7f633/test_coverage)](https://codeclimate.com/github/maxine-red/moo_ebooks/test_coverage)
 
 [![Inline docs](http://inch-ci.org/github/maxine-red/moo_ebooks.svg)](http://inch-ci.org/github/maxine-red/moo_ebooks)
 
