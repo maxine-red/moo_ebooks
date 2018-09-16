@@ -1,11 +1,9 @@
 env:
   global:
-    - CC_TEST_REPORTER_ID=96f238fd7e66352701a3165709fabd053edf0517ac8e90e34957aee19cc2696d
+    - CC_TEST_REPORTER_ID=3171ba1ac7c8575efee03c1febc5b473a5c91fdac738f6a10ef9e7c94367c91f
 language: ruby
 rvm:
   - 2.3
-  #- 2.4
-  #- 2.5
 deploy:
   provider: rubygems
   api_key:
