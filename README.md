@@ -59,6 +59,7 @@ Follow me on Twitter, if you're brave enough.
 [MIT](https://github.com/maxine-red/moo_ebooks/blob/master/LICENSE)
 
 Copyright 2013 :copyright: Jaiden Mispy
+
 Copyright 2018 :copyright: Maxine Michalski
 
 ## Contributing
