@@ -3,9 +3,8 @@
 require 'spec_helper'
 require 'tempfile'
 
-def Process.rss
-  `ps -o rss= -p #{Process.pid}`.chomp.to_i
-end
+# TODO: Define API here, get 100% test coverage and make rubocop not throw more
+# offenses
 
 describe Ebooks::Model do
   describe 'making tweets' do
