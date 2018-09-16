@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'objspace'
 
 module MemoryUsage
@@ -32,6 +34,6 @@ module MemoryUsage
     GC.enable
     full_gc
 
-    return MemoryReport.new(total_memsize)
+    MemoryReport.new(total_memsize)
   end
 end

@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-# encoding: utf-8
+# frozen_string_literal: true
 
 require 'json'
 require 'set'
@@ -46,7 +46,7 @@ module Ebooks
     def self.load(path)
       model = Model.new
       model.instance_eval do
-        props = Marshal.load(File.open(path, 'rb') { |f| f.read })
+        props = Marshal.load(File.open(path, 'rb', &:read))
         @tokens = props[:tokens]
         @sentences = props[:sentences]
         @mentions = props[:mentions]
@@ -59,12 +59,12 @@ module Ebooks
     # @param path [String]
     def save(path)
       File.open(path, 'wb') do |f|
-        f.write(Marshal.dump({
-          tokens: @tokens,
-          sentences: @sentences,
-          mentions: @mentions,
-          keywords: @keywords
-        }))
+        f.write(Marshal.dump(
+                  tokens: @tokens,
+                  sentences: @sentences,
+                  mentions: @mentions,
+                  keywords: @keywords
+        ))
       end
       self
     end
@@ -77,26 +77,25 @@ module Ebooks
         log "No existing model found at #{path}"
         return
       else
-        #read-in and deserialize existing model
-        props = Marshal.load(File.open(path,'rb') { |old| old.read })
+        # read-in and deserialize existing model
+        props = Marshal.load(File.open(path, 'rb', &:read))
         old_tokens = props[:tokens]
         old_sentences = props[:sentences]
         old_mentions = props[:mentions]
         old_keywords = props[:keywords]
 
-        #append existing properties to new ones and overwrite with new model
+        # append existing properties to new ones and overwrite with new model
         File.open(path, 'wb') do |f|
-          f.write(Marshal.dump({
-            tokens: @tokens.concat(old_tokens),
-            sentences: @sentences.concat(old_sentences),
-            mentions: @mentions.concat(old_mentions),
-            keywords: @keywords.concat(old_keywords)
-          }))
+          f.write(Marshal.dump(
+                    tokens: @tokens.concat(old_tokens),
+                    sentences: @sentences.concat(old_sentences),
+                    mentions: @mentions.concat(old_mentions),
+                    keywords: @keywords.concat(old_keywords)
+          ))
         end
       end
       self
     end
-
 
     def initialize
       @tokens = []
@@ -109,12 +108,12 @@ module Ebooks
     # @param token [String]
     # @return [Integer]
     def tikify(token)
-      if @tikis.has_key?(token) then
-        return @tikis[token]
+      if @tikis.key?(token)
+        @tikis[token]
       else
-        (@tokens.length+1)%1000 == 0 and puts "#{@tokens.length+1} tokens"
+        ((@tokens.length + 1) % 1000 == 0) && puts("#{@tokens.length + 1} tokens")
         @tokens << token
-        return @tikis[token] = @tokens.length-1
+        @tikis[token] = @tokens.length - 1
       end
     end
 
@@ -137,14 +136,14 @@ module Ebooks
     # Consume a corpus into this model
     # @param path [String]
     def consume(path)
-      content = File.read(path, :encoding => 'utf-8')
+      content = File.read(path, encoding: 'utf-8')
 
-      if path.split('.')[-1] == "json"
+      if path.split('.')[-1] == 'json'
         log "Reading json corpus from #{path}"
         lines = JSON.parse(content).map do |tweet|
           tweet['text']
         end
-      elsif path.split('.')[-1] == "csv"
+      elsif path.split('.')[-1] == 'csv'
         log "Reading CSV corpus from #{path}"
         content = CSV.parse(content)
         header = content.shift
@@ -163,7 +162,7 @@ module Ebooks
     # Consume a sequence of lines
     # @param lines [Array<String>]
     def consume_lines(lines)
-      log "Removing commented lines and sorting mentions"
+      log 'Removing commented lines and sorting mentions'
 
       statements = []
       mentions = []
@@ -178,8 +177,8 @@ module Ebooks
         end
       end
 
-      text = statements.join("\n").encode('UTF-8', :invalid => :replace)
-      mention_text = mentions.join("\n").encode('UTF-8', :invalid => :replace)
+      text = statements.join("\n").encode('UTF-8', invalid: :replace)
+      mention_text = mentions.join("\n").encode('UTF-8', invalid: :replace)
 
       lines = nil; statements = nil; mentions = nil # Allow garbage collection
 
@@ -188,7 +187,7 @@ module Ebooks
       @sentences = mass_tikify(text)
       @mentions = mass_tikify(mention_text)
 
-      log "Ranking keywords"
+      log 'Ranking keywords'
       @keywords = NLP.keywords(text).top(200).map(&:to_s)
       log "Top keywords: #{@keywords[0]} #{@keywords[1]} #{@keywords[2]}"
 
@@ -200,15 +199,15 @@ module Ebooks
     def consume_all(paths)
       lines = []
       paths.each do |path|
-        content = File.read(path, :encoding => 'utf-8')
+        content = File.read(path, encoding: 'utf-8')
 
-        if path.split('.')[-1] == "json"
+        if path.split('.')[-1] == 'json'
           log "Reading json corpus from #{path}"
           l = JSON.parse(content).map do |tweet|
             tweet['text']
           end
           lines.concat(l)
-        elsif path.split('.')[-1] == "csv"
+        elsif path.split('.')[-1] == 'csv'
           log "Reading CSV corpus from #{path}"
           content = CSV.parse(content)
           header = content.shift
@@ -246,15 +245,15 @@ module Ebooks
     # @param generator [SuffixGenerator, nil]
     # @param retry_limit [Integer] how many times to retry on invalid tweet
     # @return [String]
-    def make_statement(limit=140, generator=nil, retry_limit=10)
+    def make_statement(limit = 140, generator = nil, retry_limit = 10)
       responding = !generator.nil?
       generator ||= SuffixGenerator.build(@sentences)
 
       retries = 0
-      tweet = ""
+      tweet = ''
 
-      while (tikis = generator.generate(3, :bigrams)) do
-        #log "Attempting to produce tweet try #{retries+1}/#{retry_limit}"
+      while (tikis = generator.generate(3, :bigrams))
+        # log "Attempting to produce tweet try #{retries+1}/#{retry_limit}"
         break if (tikis.length > 3 || responding) && valid_tweet?(tikis, limit)
 
         retries += 1
@@ -262,8 +261,8 @@ module Ebooks
       end
 
       if verbatim?(tikis) && tikis.length > 3 # We made a verbatim tweet by accident
-        #log "Attempting to produce unigram tweet try #{retries+1}/#{retry_limit}"
-        while (tikis = generator.generate(3, :unigrams)) do
+        # log "Attempting to produce unigram tweet try #{retries+1}/#{retry_limit}"
+        while (tikis = generator.generate(3, :unigrams))
           break if valid_tweet?(tikis, limit) && !verbatim?(tikis)
 
           retries += 1
@@ -316,7 +315,7 @@ module Ebooks
     # @param limit [Integer] characters available for response
     # @param sentences [Array<Array<Integer>>]
     # @return [String]
-    def make_response(input, limit=140, sentences=@mentions)
+    def make_response(input, limit = 140, sentences = @mentions)
       # Prefer mentions
       relevant, slightly_relevant = find_relevant(sentences, input)
 

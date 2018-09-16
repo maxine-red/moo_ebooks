@@ -1,4 +1,6 @@
-# encoding: utf-8
+
+# frozen_string_literal: true
+
 require 'fast-stemmer'
 require 'highscore'
 require 'htmlentities'
@@ -7,7 +9,7 @@ module Ebooks
   module NLP
     # We deliberately limit our punctuation handling to stuff we can do consistently
     # It'll just be a part of another token if we don't split it out, and that's fine
-    PUNCTUATION = ".?!,"
+    PUNCTUATION = '.?!,'
 
     # Lazy-load NLP libraries and resources
     # Some of this stuff is pretty heavy and we don't necessarily need
@@ -17,7 +19,7 @@ module Ebooks
     # Stopwords are common words that should often be ignored
     # @return [Array<String>]
     def self.stopwords
-      @stopwords ||= File.exists?('stopwords.txt') ? File.read('stopwords.txt').split : []
+      @stopwords ||= File.exist?('stopwords.txt') ? File.read('stopwords.txt').split : []
     end
 
     # Lazily loads an array of known English nouns
@@ -52,7 +54,7 @@ module Ebooks
     # @param text [String]
     # @return [String]
     def self.normalize(text)
-      htmlentities.decode text.gsub('“', '"').gsub('”', '"').gsub('’', "'").gsub('…', '...')
+      htmlentities.decode text.tr('“', '"').tr('”', '"').tr('’', "'").gsub('…', '...')
     end
 
     # Split text into sentences
@@ -79,7 +81,7 @@ module Ebooks
     # @param word [String]
     # @return [String]
     def self.stem(word)
-      Stemmer::stem_word(word.downcase)
+      Stemmer.stem_word(word.downcase)
     end
 
     # Use highscore gem to find interesting keywords in a corpus
@@ -92,15 +94,15 @@ module Ebooks
       text = Highscore::Content.new(text)
 
       text.configure do
-        #set :multiplier, 2
-        #set :upper_case, 3
-        #set :long_words, 2
-        #set :long_words_threshold, 15
-        #set :vowels, 1                     # => default: 0 = not considered
-        #set :consonants, 5                 # => default: 0 = not considered
-        #set :ignore_case, true             # => default: false
-        set :word_pattern, /(?<!@)(?<=\s)[\p{Word}']+/           # => default: /\w+/
-        #set :stemming, true                # => default: false
+        # set :multiplier, 2
+        # set :upper_case, 3
+        # set :long_words, 2
+        # set :long_words_threshold, 15
+        # set :vowels, 1                     # => default: 0 = not considered
+        # set :consonants, 5                 # => default: 0 = not considered
+        # set :ignore_case, true             # => default: false
+        set :word_pattern, /(?<!@)(?<=\s)[\p{Word}']+/ # => default: /\w+/
+        # set :stemming, true                # => default: false
       end
 
       text.keywords
@@ -111,7 +113,7 @@ module Ebooks
     # @param tokens [Array<String>]
     # @return [String]
     def self.reconstruct(tikis, tokens)
-      text = ""
+      text = ''
       last_token = nil
       tikis.each do |tiki|
         next if tiki == INTERIM
@@ -128,8 +130,8 @@ module Ebooks
     # @param token2 [String]
     # @return [Boolean]
     def self.space_between?(token1, token2)
-      p1 = self.punctuation?(token1)
-      p2 = self.punctuation?(token2)
+      p1 = punctuation?(token1)
+      p2 = punctuation?(token2)
       if p1 && p2 # "foo?!"
         false
       elsif !p1 && p2 # "foo."
@@ -188,7 +190,7 @@ module Ebooks
     # @return [Boolean]
     def self.subseq?(a1, a2)
       !a1.each_index.find do |i|
-        a1[i...i+a2.length] == a2
+        a1[i...i + a2.length] == a2
       end.nil?
     end
   end

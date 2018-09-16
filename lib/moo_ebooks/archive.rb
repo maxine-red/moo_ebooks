@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-# encoding: utf-8
+# frozen_string_literal: true
 
 require 'twitter'
 require 'json'
@@ -11,19 +11,19 @@ module Ebooks
     attr_reader :tweets
 
     def make_client
-      if File.exists?(CONFIG_PATH)
+      if File.exist?(CONFIG_PATH)
         @config = JSON.parse(File.read(CONFIG_PATH), symbolize_names: true)
       else
         @config = {}
 
         puts "As Twitter no longer allows anonymous API access, you'll need to enter the auth details of any account to use for archiving. These will be stored in #{CONFIG_PATH} if you need to change them later."
-        print "Consumer key: "
+        print 'Consumer key: '
         @config[:consumer_key] = STDIN.gets.chomp
-        print "Consumer secret: "
+        print 'Consumer secret: '
         @config[:consumer_secret] = STDIN.gets.chomp
-        print "Access token: "
+        print 'Access token: '
         @config[:oauth_token] = STDIN.gets.chomp
-        print "Access secret: "
+        print 'Access secret: '
         @config[:oauth_token_secret] = STDIN.gets.chomp
 
         File.open(CONFIG_PATH, 'w') do |f|
@@ -39,18 +39,16 @@ module Ebooks
       end
     end
 
-    def initialize(username, path=nil, client=nil)
+    def initialize(username, path = nil, client = nil)
       @username = username
       @path = path || "corpus/#{username}.json"
 
-      if File.directory?(@path)
-        @path = File.join(@path, "#{username}.json")
-      end
+      @path = File.join(@path, "#{username}.json") if File.directory?(@path)
 
       @client = client || make_client
 
-      if (File.exists?(@path) && !File.zero?(@path))
-        @filetext = File.read(@path, :encoding => 'utf-8')
+      if File.exist?(@path) && !File.zero?(@path)
+        @filetext = File.read(@path, encoding: 'utf-8')
         @tweets = JSON.parse(@filetext, symbolize_names: true)
         log "Currently #{@tweets.length} tweets for #{@username}"
       else
@@ -81,7 +79,7 @@ module Ebooks
 
       opts = {
         count: 200,
-        #include_rts: false,
+        # include_rts: false,
         trim_user: true
       }
 
@@ -92,8 +90,8 @@ module Ebooks
         begin
           new = @client.user_timeline(@username, opts)
         rescue Twitter::Error::TooManyRequests
-          log "Rate limit exceeded. Waiting for 5 mins before retry."
-          sleep 60*5
+          log 'Rate limit exceeded. Waiting for 5 mins before retry.'
+          sleep 60 * 5
           retry
         end
         break if new.length <= 1
@@ -102,13 +100,13 @@ module Ebooks
         max_id = new.last.id
       end
 
-      if tweets.length == 0
-        log "No new tweets"
+      if tweets.empty?
+        log 'No new tweets'
       else
         @tweets ||= []
-        @tweets = tweets.map(&:attrs).each { |tw|
+        @tweets = tweets.map(&:attrs).each do |tw|
           tw.delete(:entities)
-        } + @tweets
+        end + @tweets
       end
       file.write(JSON.pretty_generate(@tweets))
     end

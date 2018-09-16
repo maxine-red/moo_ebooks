@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-# encoding: utf-8
+# frozen_string_literal: true
 
 require 'twitter'
 require 'json'
@@ -8,15 +8,14 @@ require 'pry'
 
 module Ebooks
   class Sync
-
     def self.run(botname, username)
       bot = Ebooks::Bot.get(botname)
       bot.configure
       source_user = username
       ebooks_user = bot.username
       user = bot.twitter.user(source_user)
-      if user.profile_image_url then
-        Ebooks::Sync::get(user.profile_image_url(:original), "image/#{source_user}_avatar")
+      if user.profile_image_url
+        Ebooks::Sync.get(user.profile_image_url(:original), "image/#{source_user}_avatar")
         avatar = MiniMagick::Image.open("image/#{source_user}_avatar")
         avatar.flip
         avatar.write("image/#{ebooks_user}_avatar")
@@ -26,8 +25,8 @@ module Ebooks
       else
         p "#{source_user} does not have a profile image to clone."
       end
-      if user.profile_banner_url then
-        Ebooks::Sync::get(user.profile_banner_url, "image/#{source_user}banner")
+      if user.profile_banner_url
+        Ebooks::Sync.get(user.profile_banner_url, "image/#{source_user}banner")
         banner = MiniMagick::Image.open("image/#{source_user}banner")
         banner.flip
         banner.write("image/#{ebooks_user}_banner")
@@ -40,12 +39,11 @@ module Ebooks
     end
 
     def self.get(url, destination)
-      File.open(destination, "wb") do |saved_file|
-        open(url, "rb") do |read_file|
+      File.open(destination, 'wb') do |saved_file|
+        open(url, 'rb') do |read_file|
           saved_file.write(read_file.read)
         end
       end
     end
-
   end
 end

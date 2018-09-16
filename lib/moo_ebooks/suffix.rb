@@ -1,4 +1,4 @@
-# encoding: utf-8
+# frozen_string_literal: true
 
 module Ebooks
   # This generator uses data similar to a Markov model, but
@@ -17,14 +17,12 @@ module Ebooks
     end
 
     def initialize(sentences)
-      @sentences = sentences.reject { |s| s.empty? }
+      @sentences = sentences.reject(&:empty?)
       @unigrams = {}
       @bigrams = {}
 
       @sentences.each_with_index do |tikis, i|
-        if (i % 10000 == 0) then
-          log ("Building: sentence #{i} of #{sentences.length}")
-        end
+        log "Building: sentence #{i} of #{sentences.length}" if i % 10_000 == 0
         last_tiki = INTERIM
         tikis.each_with_index do |tiki, j|
           @unigrams[last_tiki] ||= []
@@ -33,12 +31,12 @@ module Ebooks
           @bigrams[last_tiki] ||= {}
           @bigrams[last_tiki][tiki] ||= []
 
-          if j == tikis.length-1 # Mark sentence endings
+          if j == tikis.length - 1 # Mark sentence endings
             @unigrams[tiki] ||= []
             @unigrams[tiki] << [i, INTERIM]
             @bigrams[last_tiki][tiki] << [i, INTERIM]
           else
-            @bigrams[last_tiki][tiki] << [i, j+1]
+            @bigrams[last_tiki][tiki] << [i, j + 1]
           end
 
           last_tiki = tiki
@@ -52,20 +50,20 @@ module Ebooks
     # @param passes [Integer] number of times to recombine
     # @param n [Symbol] :unigrams or :bigrams (affects how conservative the model is)
     # @return [Array<Integer>]
-    def generate(passes=5, n=:unigrams)
+    def generate(passes = 5, n = :unigrams)
       index = rand(@sentences.length)
       tikis = @sentences[index]
       used = [index] # Sentences we've already used
       verbatim = [tikis] # Verbatim sentences to avoid reproducing
 
-      0.upto(passes-1) do
+      0.upto(passes - 1) do
         varsites = {} # Map bigram start site => next tiki alternatives
 
         tikis.each_with_index do |tiki, i|
-          next_tiki = tikis[i+1]
+          next_tiki = tikis[i + 1]
           break if next_tiki.nil?
 
-          alternatives = (n == :unigrams) ? @unigrams[next_tiki] : @bigrams[tiki][next_tiki]
+          alternatives = n == :unigrams ? @unigrams[next_tiki] : @bigrams[tiki][next_tiki]
           # Filter out suffixes from previous sentences
           alternatives.reject! { |a| a[1] == INTERIM || used.include?(a[0]) }
           varsites[i] = alternatives unless alternatives.empty?
@@ -78,14 +76,13 @@ module Ebooks
           site[1].shuffle.each do |alt|
             verbatim << @sentences[alt[0]]
             suffix = @sentences[alt[0]][alt[1]..-1]
-            potential = tikis[0..start+1] + suffix
+            potential = tikis[0..start + 1] + suffix
 
             # Ensure we're not just rebuilding some segment of another sentence
-            unless verbatim.find { |v| NLP.subseq?(v, potential) || NLP.subseq?(potential, v) }
-              used << alt[0]
-              variant = potential
-              break
-            end
+            next if verbatim.find { |v| NLP.subseq?(v, potential) || NLP.subseq?(potential, v) }
+            used << alt[0]
+            variant = potential
+            break
           end
 
           break if variant

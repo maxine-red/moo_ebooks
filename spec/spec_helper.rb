@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'moo_ebooks'
 require_relative 'memprof'
 

@@ -1,46 +1,50 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 require 'memory_profiler'
 require 'tempfile'
 
-def Process.rss; `ps -o rss= -p #{Process.pid}`.chomp.to_i; end
+def Process.rss
+  `ps -o rss= -p #{Process.pid}`.chomp.to_i
+end
 
 describe Ebooks::Model do
   describe 'making tweets' do
-    before(:all) { @model = Ebooks::Model.consume(path("data/0xabad1dea.json")) }
+    before(:all) { @model = Ebooks::Model.consume(path('data/0xabad1dea.json')) }
 
-    it "generates a tweet" do
+    it 'generates a tweet' do
       s = @model.make_statement
       expect(s.length).to be <= 140
       puts s
     end
 
-    it "generates an appropriate response" do
-      s = @model.make_response("hi")
+    it 'generates an appropriate response' do
+      s = @model.make_response('hi')
       expect(s.length).to be <= 140
-      expect(s.downcase).to include("hi")
+      expect(s.downcase).to include('hi')
       puts s
     end
   end
 
-  it "consumes, saves and loads models correctly" do
+  it 'consumes, saves and loads models correctly' do
     model = nil
 
     report = MemoryUsage.report do
-      model = Ebooks::Model.consume(path("data/0xabad1dea.json"))
+      model = Ebooks::Model.consume(path('data/0xabad1dea.json'))
     end
-    expect(report.total_memsize).to be < 200000000
+    expect(report.total_memsize).to be < 200_000_000
 
-    file = Tempfile.new("0xabad1dea")
+    file = Tempfile.new('0xabad1dea')
     model.save(file.path)
 
     report2 = MemoryUsage.report do
       model = Ebooks::Model.load(file.path)
     end
-    expect(report2.total_memsize).to be < 4000000
+    expect(report2.total_memsize).to be < 4_000_000
 
     expect(model.tokens[0]).to be_a String
-    expect(model.sentences[0][0]).to be_a Fixnum
-    expect(model.mentions[0][0]).to be_a Fixnum
+    expect(model.sentences[0][0]).to be_a Integer
+    expect(model.mentions[0][0]).to be_a Integer
     expect(model.keywords[0]).to be_a String
 
     puts "0xabad1dea.model uses #{report2.total_memsize} bytes in memory"

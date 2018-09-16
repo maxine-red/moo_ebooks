@@ -1,16 +1,18 @@
-# encoding: utf-8
+
+# frozen_string_literal: true
+
 require 'twitter'
 
 # Monkeypatch hack to fix upstream dependency issue
 # https://github.com/sferik/twitter/issues/709
 class HTTP::URI
   def port
-    443 if self.https?
+    443 if https?
   end
 end
 
 module Ebooks
-  class ConfigurationError < Exception
+  class ConfigurationError < RuntimeError
   end
 
   # Represents a single reply tree of tweets
@@ -33,7 +35,7 @@ module Ebooks
     # Make an informed guess as to whether a user is a bot based
     # on their behavior in this conversation
     def is_bot?(username)
-      usertweets = @tweets.select { |t| t.user.screen_name.downcase == username.downcase }
+      usertweets = @tweets.select { |t| t.user.screen_name.casecmp(username).zero? }
 
       if usertweets.length > 2
         if username.include?('ebooks') || (usertweets[-1].created_at - usertweets[-3].created_at) < 12
@@ -46,7 +48,7 @@ module Ebooks
     # We want to avoid spamming non-participating users
     def can_include?(username)
       @tweets.length <= 4 ||
-        !@tweets.select { |t| t.user.screen_name.downcase == username.downcase }.empty?
+        !@tweets.select { |t| t.user.screen_name.casecmp(username).zero? }.empty?
     end
   end
 
@@ -89,17 +91,17 @@ module Ebooks
       # Process mentions to figure out who to reply to
       # i.e. not self and nobody who has seen too many secondary mentions
       reply_mentions = @mentions.reject do |m|
-        m.downcase == @bot.username.downcase || !@bot.conversation(ev).can_include?(m)
+        m.casecmp(@bot.username).zero? || !@bot.conversation(ev).can_include?(m)
       end
       @reply_mentions = ([ev.user.screen_name] + reply_mentions).uniq
 
-      @reply_prefix = @reply_mentions.map { |m| '@'+m }.join(' ') + ' '
+      @reply_prefix = @reply_mentions.map { |m| '@' + m }.join(' ') + ' '
       @limit = 140 - @reply_prefix.length
 
       mless = ev.text
       begin
         ev.attrs[:entities][:user_mentions].reverse.each do |entity|
-          last = mless[entity[:indices][1]..-1]||''
+          last = mless[entity[:indices][1]..-1] || ''
           mless = mless[0...entity[:indices][0]] + last.strip
         end
       rescue Exception
@@ -114,18 +116,18 @@ module Ebooks
     # @param size [String] A twitter image size to return. Supported sizes are thumb, small, medium (default), large
     # @return [Array<String>] image URIs included in tweet
     def media_uris(size_input = '')
-      case size_input
-      when 'thumb'
-        size = ':thumb'
-      when 'small'
-        size = ':small'
-      when 'medium'
-        size = ':medium'
-      when 'large'
-        size = ':large'
-      else
-        size = ''
-      end
+      size = case size_input
+             when 'thumb'
+               ':thumb'
+             when 'small'
+               ':small'
+             when 'medium'
+               ':medium'
+             when 'large'
+               ':large'
+             else
+               ''
+             end
 
       # Start collecting uris.
       uris = []
@@ -161,13 +163,15 @@ module Ebooks
     attr_accessor :delay_range
 
     # @return [Array] list of all defined bots
-    def self.all; @@all ||= []; end
+    def self.all
+      @@all ||= []
+    end
 
     # Fetches a bot by username
     # @param username [String]
     # @return [Ebooks::Bot]
     def self.get(username)
-      all.find { |bot| bot.username.downcase == username.downcase }
+      all.find { |bot| bot.username.casecmp(username).zero? }
     end
 
     # Logs info to stdout in the context of this bot
@@ -189,7 +193,7 @@ module Ebooks
       @delay_range ||= 1..6
       configure
 
-      b.call(self) unless b.nil?
+      yield(self) unless b.nil?
       Bot.all << self
     end
 
@@ -202,12 +206,10 @@ module Ebooks
     # @return [Ebooks::Conversation]
     def conversation(tweet)
       conv = if tweet.in_reply_to_status_id?
-        @conversations[tweet.in_reply_to_status_id]
+               @conversations[tweet.in_reply_to_status_id]
       end
 
-      if conv.nil?
-        conv = @conversations[tweet.id] || Conversation.new(self)
-      end
+      conv = @conversations[tweet.id] || Conversation.new(self) if conv.nil?
 
       if tweet.in_reply_to_status_id?
         @conversations[tweet.in_reply_to_status_id] = conv
@@ -215,10 +217,8 @@ module Ebooks
       @conversations[tweet.id] = conv
 
       # Expire any old conversations to prevent memory growth
-      @conversations.each do |k,v|
-        if v != conv && Time.now - v.last_update > 3600
-          @conversations.delete(k)
-        end
+      @conversations.each do |k, v|
+        @conversations.delete(k) if v != conv && Time.now - v.last_update > 3600
       end
 
       conv
@@ -256,9 +256,9 @@ module Ebooks
     def receive_event(ev)
       case ev
       when Array # Initial array sent on first connection
-        log "Online!"
+        log 'Online!'
         fire(:connect, ev)
-        return
+        nil
       when Twitter::DirectMessage
         return if ev.sender.id == @user.id # Don't reply to self
         log "DM from @#{ev.sender.screen_name}: #{ev.text}"
@@ -303,7 +303,7 @@ module Ebooks
           fire(:follow, ev.source)
         when :favorite, :unfavorite
           return if ev.source.id == @user.id # Ignore our own favorites
-          log "@#{ev.source.screen_name} #{ev.name.to_s}d: #{ev.target_object.text}"
+          log "@#{ev.source.screen_name} #{ev.name}d: #{ev.target_object.text}"
           fire(ev.name, ev.source, ev.target_object)
         when :user_update
           update_myself ev.source
@@ -316,7 +316,7 @@ module Ebooks
     end
 
     # Updates @user and calls on_user_update.
-    def update_myself(new_me=twitter.user)
+    def update_myself(new_me = twitter.user)
       @user = new_me if @user.nil? || new_me.id == @user.id
       @username = @user.screen_name
       log 'User information updated'
@@ -326,19 +326,17 @@ module Ebooks
     # Configures client and fires startup event
     def prepare
       # Sanity check
-      if @username.nil?
-        raise ConfigurationError, "bot username cannot be nil"
-      end
+      raise ConfigurationError, 'bot username cannot be nil' if @username.nil?
 
       if @consumer_key.nil? || @consumer_key.empty? ||
          @consumer_secret.nil? || @consumer_key.empty?
-        log "Missing consumer_key or consumer_secret. These details can be acquired by registering a Twitter app at https://apps.twitter.com/"
+        log 'Missing consumer_key or consumer_secret. These details can be acquired by registering a Twitter app at https://apps.twitter.com/'
         exit 1
       end
 
       if @access_token.nil? || @access_token.empty? ||
          @access_token_secret.nil? || @access_token_secret.empty?
-        log "Missing access_token or access_token_secret. Please run `ebooks auth`."
+        log 'Missing access_token or access_token_secret. Please run `ebooks auth`.'
         exit 1
       end
 
@@ -354,7 +352,7 @@ module Ebooks
 
     # Start running user event stream
     def start
-      log "starting tweet stream"
+      log 'starting tweet stream'
 
       stream.user do |ev|
         receive_event ev
@@ -366,17 +364,15 @@ module Ebooks
     # @param args arguments for event handler
     def fire(event, *args)
       handler = "on_#{event}".to_sym
-      if respond_to? handler
-        self.send(handler, *args)
-      end
+      send(handler, *args) if respond_to? handler
     end
 
     # Delay an action for a variable period of time
     # @param range [Range, Integer] range of seconds to choose for delay
-    def delay(range=@delay_range, &b)
+    def delay(range = @delay_range)
       time = rand(range) unless range.is_a? Integer
       sleep time
-      b.call
+      yield
     end
 
     # Check if a username is blacklisted
@@ -394,7 +390,7 @@ module Ebooks
     # @param ev [Twitter::Tweet, Twitter::DirectMessage]
     # @param text [String] contents of reply excluding reply_prefix
     # @param opts [Hash] additional params to pass to twitter gem
-    def reply(ev, text, opts={})
+    def reply(ev, text, opts = {})
       opts = opts.clone
 
       if ev.is_a? Twitter::DirectMessage
@@ -408,7 +404,7 @@ module Ebooks
           return false
         end
 
-        text = meta.reply_prefix + text unless text.match(/@#{Regexp.escape ev.user.screen_name}/i)
+        text = meta.reply_prefix + text unless text =~ /@#{Regexp.escape ev.user.screen_name}/i
         log "Replying to @#{ev.user.screen_name} with: #{text}"
         tweet = twitter.update(text, opts.merge(in_reply_to_status_id: ev.id))
         conversation(tweet).add(tweet)
