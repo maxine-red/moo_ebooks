@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    moo_ebooks (1.0.1)
+    moo_ebooks (1.0.2)
       highscore (~> 1.2)
       htmlentities (~> 4.3)
 
