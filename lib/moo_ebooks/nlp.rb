@@ -1,7 +1,6 @@
 
 # frozen_string_literal: true
 
-require 'fast-stemmer'
 require 'highscore'
 require 'htmlentities'
 
@@ -22,31 +21,7 @@ module Ebooks
     # Stopwords are common words that should often be ignored
     # @return [Array<String>]
     def self.stopwords
-      @stopwords ||= if File.exist?('stopwords.txt')
-                       File.read('stopwords.txt').split
-                     else
-                       []
-                     end
-    end
-
-    # Lazily loads an array of known English nouns
-    # @return [Array<String>]
-    def self.nouns
-      @nouns ||= File.read(File.join(DATA_PATH, 'nouns.txt')).split
-    end
-
-    # Lazily loads an array of known English adjectives
-    # @return [Array<String>]
-    def self.adjectives
-      @adjectives ||= File.read(File.join(DATA_PATH, 'adjectives.txt')).split
-    end
-
-    # Lazily load part-of-speech tagging library
-    # This can determine whether a word is being used as a noun/adjective/verb
-    # @return [EngTagger]
-    def self.tagger
-      require 'engtagger'
-      @tagger ||= EngTagger.new
+      @stopwords ||= File.read(File.join(DATA_PATH, 'stopwords.txt')).split
     end
 
     # Lazily load HTML entity decoder
@@ -84,13 +59,6 @@ module Ebooks
       regex = /\s+|(?<=[#{PUNCTUATION}]\s)(?=[a-zA-Z])|
         (?<=[a-zA-Z])(?=[#{PUNCTUATION}]+\s)/x
       sentence.split(regex)
-    end
-
-    # Get the 'stem' form of a word e.g. 'cats' -> 'cat'
-    # @param word [String]
-    # @return [String]
-    def self.stem(word)
-      Stemmer.stem_word(word.downcase)
     end
 
     # Use highscore gem to find interesting keywords in a corpus

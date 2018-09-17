@@ -41,13 +41,6 @@ module Ebooks
       @tikis = {}
     end
 
-    # Generate a new model from a corpus file
-    # @param data [Hash]
-    # @return [Ebooks::Model]
-    def self.consume(data)
-      Model.new.consume(data)
-    end
-
     # Load a saved model
     # @param data [Hash]
     # @return [Ebooks::Model]
@@ -68,19 +61,34 @@ module Ebooks
     end
 
     # Turn this model into its JSON representation.
-    # @param path [String]
     def to_json
-      data = { tokens: @tokens, sentences: @sentences, mentions: @mentions,
-               keywords: @keywords }
-      data.to_json
+      to_hash.to_json
+    end
+
+    # Turn this model into its Hash representation
+    def to_hash
+      { tokens: @tokens, sentences: @sentences, mentions: @mentions,
+        keywords: @keywords }
     end
 
     # Consume a corpus into this model
     # @param content [Hash]
     def consume(content)
+      model = Ebooks::Model.new
+      model.consume!(content)
+      model
+    end
+
+    # Consume a corpus into this model
+    # @param content [Hash]
+    def consume!(content)
+      unless content.key?(:statuses) || content.key?(:mentions)
+        raise ArgumentError, 'Malformed hash object. At least :statuses and/or'\
+                             ' :mentions must be present as a key'
+      end
       consume_statuses(content[:statuses]) unless content[:statuses].nil?
       consume_mentions(content[:mentions]) unless content[:mentions].nil?
-      self
+      nil
     end
 
     # Generate some text
@@ -89,27 +97,7 @@ module Ebooks
     # @param retry_limit [Integer] how many times to retry on invalid status
     # @return [String]
     def update(limit = 140, generator = nil, retry_limit = 10)
-      responding = !generator.nil?
-      generator ||= SuffixGenerator.build(@sentences)
-
-      retries = 0
-
-      while (tikis = generator.generate(3, :bigrams))
-        break if (tikis.length > 3 || responding) && valid_status?(tikis, limit)
-
-        retries += 1
-        break if retries >= retry_limit
-      end
-
-      if verbatim?(tikis) && tikis.length > 3
-        # We made a verbatim status by accident
-        while (tikis = generator.generate(3, :unigrams))
-          break if valid_status?(tikis, limit) && !verbatim?(tikis)
-
-          retries += 1
-          break if retries >= retry_limit
-        end
-      end
+      tikis = gather_tikis(limit, generator, retry_limit)
 
       status = NLP.reconstruct(tikis, @tokens)
 
@@ -132,14 +120,52 @@ module Ebooks
       elsif slightly_relevant.length >= 5
         generator = SuffixGenerator.build(slightly_relevant)
         update(limit, generator)
-      elsif sentences.equal?(@mentions)
-        update(input, limit, @sentences)
       else
         update(limit)
       end
     end
 
     private
+
+    def gather_tikis(limit, generator, retry_limit)
+      responding = !generator.nil?
+      generator ||= SuffixGenerator.build(@sentences)
+
+      @retries = 0
+
+      tikis = make_bigram_tikis(limit, generator, retry_limit, responding)
+
+      if verbatim?(tikis) && tikis.length > 3
+        # We made a verbatim status by accident
+        tikis = make_unigram_tikis(limit, generator, retry_limit)
+      end
+      @retries = nil
+      tikis
+    end
+
+    def make_unigram_tikis(limit, generator, retry_limit)
+      while (tikis = generator.generate(3, :unigrams))
+        break if valid_status?(tikis, limit) && !verbatim?(tikis)
+
+        @retries += 1
+        break if retry_limit_reached?(retry_limit)
+      end
+      tikis
+    end
+
+    def make_bigram_tikis(limit, generator, retry_limit, responding)
+      while (tikis = generator.generate(3, :bigrams))
+        break if (tikis.length > 3 || responding) && valid_status?(tikis, limit)
+
+        @retries += 1
+        break if retry_limit_reached?(retry_limit)
+      end
+      tikis
+    end
+
+    def retry_limit_reached?(retry_limit)
+      @retries >= retry_limit
+    end
 
     # Reverse lookup a token index from a token
     # @param token [String]
