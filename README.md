@@ -34,8 +34,14 @@ or simply run `gem install moo_ebooks`
 
 ## Example usage code
 
+Say, for example, we have a json file full of statuses in 'statuses.json'. These statuses are arranged so that there is an array of strings with the key ':statuses'. The following code will read that file in, create a model based off of it and print out a randomly generated status based off of them.
+
 ``` ruby
-# No example ready yet.
+require 'moo_ebooks'
+
+Model = Ebooks::Model.from_json(File.read('statuses.json'))
+
+Model.update
 ```
 
 ## Versioning
