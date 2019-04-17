@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'json'
+require 'yaml'
 require 'set'
 require 'digest/md5'
 
@@ -42,6 +43,13 @@ module Ebooks
     end
 
     # Load a saved model
+    # @param data [String]
+    # @return [Ebooks::Model]
+    def self.from_yaml(data)
+      from_hash(YAML.load(data))
+    end
+
+    # Load a saved model
     # @param data [Hash]
     # @return [Ebooks::Model]
     def self.from_hash(data)
@@ -60,6 +68,11 @@ module Ebooks
       from_hash(JSON.parse(data, symbolize_names: true))
     end
 
+    # Turn this model into its YAML representation.
+    def to_yaml
+      to_hash.to_yaml
+    end
+    
     # Turn this model into its JSON representation.
     def to_json
       to_hash.to_json
