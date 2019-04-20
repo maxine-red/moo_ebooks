@@ -218,8 +218,15 @@ module Ebooks
       end
 
       text = statuses.join("\n").encode('UTF-8', invalid: :replace)
-      @sentences = mass_tikify(text)
-      @keywords = NLP.keywords(text).top(200).map(&:to_s)
+
+      # adds the new sentence structures into the sentence array
+      #  instead of overwriting it
+      mass_tikify(text).each do |sentence|
+        @sentences << sentence
+      end
+      
+      # this needs to be rewritten to merge the resulting arrays together
+      @keywords = NLP.keywords("#{text}\n#{@keywords.join("\n")}").top(200).map(&:to_s)
 
       nil
     end
