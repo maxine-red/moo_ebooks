@@ -218,8 +218,20 @@ module Ebooks
       end
 
       text = statuses.join("\n").encode('UTF-8', invalid: :replace)
-      @sentences = mass_tikify(text)
-      @keywords = NLP.keywords(text).top(200).map(&:to_s)
+
+      # adds the new sentence structures into the sentence array
+      #  instead of overwriting it
+      mass_tikify(text).each do |sentence|
+        @sentences << sentence
+      end
+      
+      # if we're gonna keep the keyword limit at 200 and we want to preserve
+      #  our old keywords array then my solution is to union the new array
+      #  with the old, randomize them and take the first 200
+      @keywords = @keywords.union(NLP
+                                    .keywords(text)
+                                    .top(200)
+                                    .map(&:to_s)).sample(200)
 
       nil
     end
@@ -232,7 +244,11 @@ module Ebooks
       end
 
       mention_text = mentions.join("\n").encode('UTF-8', invalid: :replace)
-      @mentions = mass_tikify(mention_text)
+      # the same as above, we just add onto our array instead of
+      #  overwriting it
+      mass_tikify(mention_text).each do |mention|
+        @mentions << mention
+      end
 
       nil
     end
