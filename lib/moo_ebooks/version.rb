@@ -2,8 +2,8 @@
 
 module Ebooks
   MAJOR = 1
-  MINOR = 0
-  PATH = 2
+  MINOR = 1
+  PATH = 0
 
   VERSION = "#{MAJOR}.#{MINOR}.#{PATH}"
 end
